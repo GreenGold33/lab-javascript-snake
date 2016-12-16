@@ -2,6 +2,10 @@ var rows = 50;
 var cols = 50;
 var board = [];
 var cells = [];
+var food = {
+	row: Math.floor(Math.random() * 50),
+	column: Math.floor(Math.random() * 50)
+}
 
 
 function generateBoard(){
@@ -30,6 +34,7 @@ function printSnake(){
 		var selector = '[data-row=' + position.row + '][data-col=' + position.column + ']';
 		$(selector).addClass('active');
 	})
+
 }
 
 function resetBoard(){
@@ -37,23 +42,28 @@ function resetBoard(){
 	$(selector).removeClass('active')
 }
 
-function insertSnake(snake){
-	snake.body.forEach(function(position) {
-		board[position.row][position.column] = null;
-	});
-}
-
-function removeSnake(snake){
-	snake.body.forEach(function(position) {
-		board[position.row][position.column] = null;
-	});
+function generateFood(snakeBody) {
+	food = {
+		row: Math.floor(Math.random() * 50),
+		column: Math.floor(Math.random() * 50)
+	}
+	if (!snakeBody.some(function (position) {
+		return (position.row === food.row && position.column === food.column)
+	})) {
+		// board[food.row][food.column] = 'f';
+		var selector = '[data-row=' + food.row + '][data-col=' + food.column + ']';
+		$(selector).addClass('food');
+	} else {
+		generateFood(snakeBody);
+	}
+	
 }
 
 class Snake {
 	constructor(){
 		// direction 0=up, 1=right, 2=down, 3=left
 		this.direction = 1;
-		this.body = [{row: 1, column: 6},{row: 1, column: 6},{row: 1, column: 5},{row:1, column: 4},{row:1, column: 3}, {row:1, column: 2}, {row:1, column: 1}];
+		this.body = [{row: 1, column: 7},{row: 1, column: 6},{row: 1, column: 5},{row:1, column: 4},{row:1, column: 3}, {row:1, column: 2}, {row:1, column: 1}];
 	}
 
 	moveFordward(){
@@ -96,7 +106,14 @@ class Snake {
 		})) {
 			console.log('Game Over');
 			clearInterval(intervalSnake);
-		} 
+		}
+		if (this.body[0].row === food.row && this.body[0].column === food.column){
+			this.body.unshift(food);
+			var selector = '[data-row=' + food.row + '][data-col=' + food.column + ']';
+			$(selector).removeClass('food');
+			$(selector).addClass('active');
+			generateFood(this.body);
+		}
 	}
 
 	goLeft(){
@@ -170,6 +187,9 @@ createGrid($root);
 var s = new Snake();
 printSnake();
 var intervalSnake = setInterval( function(){ 
+	if ($(".food").length <= 0) {
+		generateFood(s.body);
+	}
 	s.moveFordward();
 	printSnake();
 }, 250);
