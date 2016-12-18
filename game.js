@@ -1,104 +1,106 @@
-var options = {
-	rows: 50,
-	columns: 50
-}
-
-
 function Game(options) {
 	this.rows = options.rows;
 	this.columns = options.columns;
-	this.board = [];
-	this.cells = [];
-	this.food = {
-		row: Math.floor(Math.random() * 50),
-		column: Math.floor(Math.random() * 50)
-	};
-}
-
-Game.prototype.generateBoard = function() {
-	for (var i = 0; i< 50; i++){
-		this.board.push([]);
-		for (var j = 0; j < 50; j++){
-			this.board[i][j] = null;
+	this.snake = options.snake;
+	this.food = undefined;
+	for (var rowIndex = 0; rowIndex < options.rows; rowIndex++){
+		for (var columnIndex = 0; columnIndex < options.columns; columnIndex++){
+      $('.container').append($('<div>')
+      	.addClass('cell board')
+      	.attr('data-row', rowIndex)
+      	.attr('data-col', columnIndex)
+      	);
 		}
 	}
+
+	this.generateFood();
+	this.drawFood();
+	this.drawSnake();
+	this.assignControlsToKeys();
 };
 
-Game.prototype.createGrid = function() {
-	this.board.forEach(function(row, indexRow) {
-		row.forEach(function(column, indexColumn) {
-			var cell = $('<div>').addClass('cell board');
-      cell.attr('data-row', indexRow).attr('data-col', indexColumn);
-      this.cells.push(cell);
-      $('.container').append(cell);
-		}.bind(this))
-	}.bind(this))
-};
-
-Game.prototype.resetBoard = function() {
-	var selector = '.active';
-	$(selector).removeClass('active');
-};
-
-Game.prototype.printSnake = function(snakeBody) {
-	this.resetBoard();
-	snakeBody.forEach( function(position, index) {
-		var selector = '[data-row=' + position.row + '][data-col=' + position.column + ']';
-		$(selector).addClass('active');
-	})
-};
-
-Game.prototype.generateFood = function(snakeBody) {
-	this.food = {
-		row: Math.floor(Math.random() * 50),
-		column: Math.floor(Math.random() * 50)
-	}
-	if (!snakeBody.some(function (position) {
-		return (position.row === this.food.row && position.column === this.food.column)
-	}.bind(this))) {
-		var selector = '[data-row=' + this.food.row + '][data-col=' + this.food.column + ']';
-		$(selector).addClass('food');
-	} else {
-		this.generateFood(snakeBody);
-	}
-};
-
-Game.prototype.controls = function(){
+Game.prototype.assignControlsToKeys = function(){
 	$('body').on('keydown', function(e) {
 	  switch (e.keyCode) {
 	    case 38: // arrow up
-	      snake.goUp();
+	      this.snake.goUp();
 	      break;
 	    case 40: // arrow down
-	      snake.goDown();
+	      this.snake.goDown();
 	      break;
 	    case 37: // arrow left
-	      snake.goLeft();
+	      this.snake.goLeft();
 	      break;
 	    case 39: // arrow right
-	      snake.goRight();
+	      this.snake.goRight();
 	      break;
-	    case 80: // p
-	    	clearInterval(intervalSnake);
+	    case 80: // p pause
+	    	if (this.intervalId) {
+	    		this.stop();
+	    	} else {
+	    		this.start();
+	    	}
 	    	break;
-	    default:
-	      break;
 	  }
-	});
+	}.bind(this));
 }
 
-var snake = new Snake();
-var game = new Game(options);
-game.generateBoard();
-game.createGrid();
-game.controls();
-game.printSnake(snake.body);
-var intervalSnake = setInterval( function(){ 
-	if ($(".food").length <= 0) {
-		game.generateFood(snake.body);
+Game.prototype.generateFood = function() {
+	do {
+		this.food = {
+			row: Math.floor(Math.random() * this.rows),
+			column: Math.floor(Math.random() * this.columns)
+		}
+	} while (this.snake.collidesWith(this.food));
+};
+
+Game.prototype.drawSnake = function() {
+	this.snake.body.forEach( function(position, index) {
+		var selector = '[data-row=' + position.row + '][data-col=' + position.column + ']';
+		$(selector).addClass('snake');
+	})
+};
+
+Game.prototype.clearSnake = function() {
+	$('.snake').removeClass('snake');
+};
+
+Game.prototype.drawFood = function(){
+	var selector = '[data-row=' + this.food.row + '][data-col=' + this.food.column + ']';
+	$(selector).addClass('food');	
+};
+
+Game.prototype.clearFood = function(){
+		var selector = '[data-row=' + this.food.row + '][data-col=' + this.food.column + ']';
+		$(selector).removeClass('food');
+		this.food = undefined;
+};
+
+Game.prototype.start = function(){
+	if (!this.intervalId){
+		this.intervalId = setInterval(this.update.bind(this), 100);
 	}
-	snake.moveForward(game.food);
-	game.printSnake(snake.body);
-}, 100);
+};
 
+Game.prototype.stop = function(){
+	if (this.intervalId){
+		clearInterval(this.intervalId);
+		this.intervalId = undefined;
+	}
+};
 
+Game.prototype.update = function(){
+	this.snake.moveForward(this.rows, this.columns);
+	if (this.snake.hasEatenFood(this.food)){
+		this.snake.grow();
+		this.clearFood();
+		this.generateFood();
+		this.drawFood();
+	}
+	if (this.snake.hasEatenItself()){
+		console.log('Game Over');
+		this.stop();
+	}
+	this.clearSnake();
+	this.drawSnake();
+};

@@ -1,98 +1,88 @@
 function Snake(options) {
-	this.direction = 1;
-	this.body = ;
-	this.startPosition = {
-		row: 1,
-		column: 1
-	}
-	this.body.push(this.startPosition);
+	this.direction = 'right';
+	this.body = [
+		{row: 1, column: 5},
+		{row: 1, column: 4},
+		{row: 1, column: 3},
+		{row: 1, column: 2},
+		{row: 1, column: 1}
+	];
 }
 
-Snake.prototype.moveForward = function(food) {
-	for(var i = this.body.length-1; i > 0; i--){
-		this.body[i].column = this.body[i-1].column;
-		this.body[i].row = this.body[i-1].row;
-	}
+Snake.prototype.moveForward = function(maxRows, maxColumns) {
+	var head = this.body[0];
 	switch(this.direction){
-		// Up
-		case 0:
-			this.body[0].row--;
-			if (this.body[0].row < 0){
-				this.body[0].row = 49;
-			}
+		case 'up':
+			this.body.unshift({
+				row: (head.row - 1 + maxRows ) % maxRows,
+				column: head.column
+			});
 			break;
-		// Right
-		case 1:
-			this.body[0].column++;
-			if (this.body[0].column > 50){
-				this.body[0].column = 0;
-			}
+		case 'down':
+			this.body.unshift({
+				row: (head.row + 1) % maxRows,
+				column: head.column
+			});
 			break;
-		// Down
-		case 2:
-			this.body[0].row++;
-			if (this.body[0].row > 50 ){
-				this.body[0].row = 0;
-			}
+		case 'left':
+			this.body.unshift({
+				row: head.row,
+				column: (head.column - 1 + maxColumns) % maxColumns
+			});
 			break;
-		case 3:
-			this.body[0].column--;
-			if (this.body[0].column < 0) {
-				this.body[0].column = 49;
-			}
+		case 'right':
+			this.body.unshift({
+				row: head.row,
+				column: (head.column + 1) % maxColumns
+			});
 			break;
 	}
+	this.previousTail = this.body.pop();
+};
 
-	if (this.body.some(function (position, index, array) {
-		return (position.row === array[0].row && position.column === array[0].column && index != 0)
-	})) {
-		console.log('Game Over');
-		clearInterval(intervalSnake);
+Snake.prototype.grow = function(){
+	if (this.previousTail){
+		this.body.push(this.previousTail);
+		this.previousTail = undefined;
 	}
-	if (this.body[0].row === food.row && this.body[0].column === food.column){
-		this.body.unshift(food);
-		var selector = '[data-row=' + food.row + '][data-col=' + food.column + ']';
-		$(selector).removeClass('food');
-		$(selector).addClass('active');
-	}
+};
+
+Snake.prototype.collidesWith = function(position){
+	return this.body.some(function (element){
+		return element.row === position.row && element.column === position.column;
+	});
+};
+
+Snake.prototype.hasEatenFood = function(foodPosition){
+	return this.body[0].row === foodPosition.row && this.body[0].column === foodPosition.column;
+};
+
+Snake.prototype.hasEatenItself = function(){
+	return this.body.some(function (element, index, array) {
+		return (element.row === array[0].row && element.column === array[0].column && index != 0)
+	});
 };
 
 Snake.prototype.goLeft = function() {
-	switch(this.direction){
-			// Up and Down
-			case 0:
-			case 2:
-				this.direction = 3;
-				break;
-		}
+	if (this.direction === 'up' || this.direction === 'down'){
+		this.direction = 'left';
+	}
 };
 
 Snake.prototype.goRight = function() {
-	switch(this.direction){
-		// Up and Down
-		case 0:
-		case 2:
-			this.direction = 1;
-			break;
+	if (this.direction === 'up' || this.direction === 'down'){
+		this.direction = 'right';
 	}
 };
 
 Snake.prototype.goUp = function() {
-	switch(this.direction){
-		// Right and Left
-		case 1:
-		case 3:
-			this.direction = 0;
-			break;
+	if (this.direction === 'left' || this.direction === 'right'){
+		this.direction = 'up';
 	}
 };
 
 Snake.prototype.goDown = function() {
-	switch(this.direction){
-		// Right and Left
-		case 1:
-		case 3:
-			this.direction = 2;
-			break;
+	if (this.direction === 'left' || this.direction === 'right'){
+		this.direction = 'down';
 	}
 };
