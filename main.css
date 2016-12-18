@@ -1,13 +1,12 @@
 .container {
   height: 800px;
-  margin: 100px auto;
+  margin: 30px auto;
   width: 800px;
 }
 
 .cell {
-  
   background-size: contain;
-  border: 1px solid white;
+  /*border: 1px solid white;*/
   box-sizing: border-box;
   float: left;
   height: 16px;
@@ -15,17 +14,13 @@
 }
 
 .board {
-	background-color: #2980b9;
+	background-color: #E3D4AB;
 }
 
 .active {
-  background-color: #e67e22;
+  background-color: #95BE69;
 }
 
 .food {
 	background-color: red;
-}
-
-.active-head {
-  background-color: #e74c3c;
 }
