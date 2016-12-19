@@ -67,12 +67,11 @@ Game.prototype.clearSnake = function() {
 
 Game.prototype.drawFood = function(){
 	var selector = '[data-row=' + this.food.row + '][data-col=' + this.food.column + ']';
-	$(selector).addClass('food');	
+	$(selector).addClass('food');
 };
 
 Game.prototype.clearFood = function(){
-		var selector = '[data-row=' + this.food.row + '][data-col=' + this.food.column + ']';
-		$(selector).removeClass('food');
+		$(".food").removeClass('food');
 		this.food = undefined;
 };
 
@@ -98,7 +97,7 @@ Game.prototype.update = function(){
 		this.drawFood();
 	}
 	if (this.snake.hasEatenItself()){
-		console.log('Game Over');
+		alert('Game Over');
 		this.stop();
 	}
 	this.clearSnake();
